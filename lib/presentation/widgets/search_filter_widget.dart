@@ -16,32 +16,6 @@ class SearchFilterWidget extends StatelessWidget {
       textDirection: TextDirection.rtl,
       child: Row(
         children: [
-          GestureDetector(
-            onTap: onFilterTap,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              height: 48,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: const [
-                  Icon(Icons.tune, color: Color(0xFF3E68FF)),
-                  SizedBox(width: 8),
-                  Text('تصفية'),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(width: 16),
           Expanded(
             child: Container(
               height: 48,
@@ -59,12 +33,39 @@ class SearchFilterWidget extends StatelessWidget {
               ),
               child: TextField(
                 onChanged: onSearchChanged,
+                textDirection: TextDirection.rtl,
                 textAlign: TextAlign.right,
                 decoration: const InputDecoration(
                   hintText: '...بحث',
                   border: InputBorder.none,
-                  suffixIcon: Icon(Icons.search, color: Colors.grey),
+                  prefixIcon: Icon(Icons.search, color: Colors.grey),
                 ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          GestureDetector(
+            onTap: onFilterTap,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              height: 48,
+              decoration: BoxDecoration(
+                color: const Color(0xFF4DA6FF),
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: const [
+                  Icon(Icons.tune, color: Colors.white),
+                  SizedBox(width: 8),
+                  Text('تصفية', style: TextStyle(color: Colors.white)),
+                ],
               ),
             ),
           ),

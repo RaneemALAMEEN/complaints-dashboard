@@ -29,30 +29,79 @@ class ComplaintRowWidget extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: const Color(0xFFE8ECFF)),
         ),
-        child: Row(
-          children: [
-            _BodyCell(text: complaint.number, flex: 1),
-            _BodyCell(text: complaint.region, flex: 2),
-            _BodyCell(text: complaint.description, flex: 4),
-            Expanded(
-              flex: 2,
-              child: Align(
-                alignment: Alignment.centerRight,
-                child: _StatusSelector(
-                  status: status,
-                  onChanged: onStatusChanged,
-                ),
-              ),
-            ),
-            Expanded(
-              flex: 2,
-              child: ActionButtonsWidget(
-                onView: onView,
-                onDelete: onDelete,
-              ),
-            ),
-          ],
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isSmallScreen = constraints.maxWidth < 800;
+            return isSmallScreen
+                ? SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        SizedBox(width: 80, child: _BodyCellFixed(text: complaint.number)),
+                        SizedBox(width: 150, child: _BodyCellFixed(text: complaint.region)),
+                        SizedBox(width: 300, child: _BodyCellFixed(text: complaint.description)),
+                        SizedBox(
+                          width: 150,
+                          child: Align(
+                            alignment: Alignment.centerRight,
+                            child: _StatusSelector(
+                              status: status,
+                              onChanged: onStatusChanged,
+                            ),
+                          ),
+                        ),
+                        SizedBox(
+                          width: 100,
+                          child: ActionButtonsWidget(
+                            onView: onView,
+                            onDelete: onDelete,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : Row(
+                    children: [
+                      _BodyCell(text: complaint.number, flex: 1),
+                      _BodyCell(text: complaint.region, flex: 2),
+                      _BodyCell(text: complaint.description, flex: 4),
+                      Expanded(
+                        flex: 2,
+                        child: Align(
+                          alignment: Alignment.centerRight,
+                          child: _StatusSelector(
+                            status: status,
+                            onChanged: onStatusChanged,
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        flex: 1,
+                        child: ActionButtonsWidget(
+                          onView: onView,
+                          onDelete: onDelete,
+                        ),
+                      ),
+                    ],
+                  );
+          },
         ),
+      ),
+    );
+  }
+}
+
+class _BodyCellFixed extends StatelessWidget {
+  final String text;
+
+  const _BodyCellFixed({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: Text(
+        text,
       ),
     );
   }
@@ -70,11 +119,7 @@ class _BodyCell extends StatelessWidget {
       flex: flex,
       child: Align(
         alignment: Alignment.centerRight,
-        child: Text(
-          text,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
+        child: Text(text),
       ),
     );
   }

@@ -1,0 +1,190 @@
+// import 'package:complaints/presentation/pages/dashboard_shell.dart';
+// import 'package:flutter/material.dart';
+
+// class LoginPage extends StatefulWidget {
+//   const LoginPage({super.key});
+
+//   @override
+//   State<LoginPage> createState() => _LoginPageState();
+// }
+
+// class _LoginPageState extends State<LoginPage> {
+//   final _formKey = GlobalKey<FormState>();
+//   final TextEditingController _emailController = TextEditingController();
+//   final TextEditingController _passwordController = TextEditingController();
+
+//   @override
+//   void dispose() {
+//     _emailController.dispose();
+//     _passwordController.dispose();
+//     super.dispose();
+//   }
+
+//   void _onLogin() {
+//   if (_formKey.currentState?.validate() ?? false) {
+//     Navigator.of(context).pushReplacement(
+//       MaterialPageRoute(
+//         builder: (context) => const DashboardShell(),
+//       ),
+//     );
+//   }
+// }
+
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Directionality(
+//       textDirection: TextDirection.rtl,
+//       child: Scaffold(
+//         body: Container(
+//           decoration: const BoxDecoration(
+//             image: DecorationImage(
+//               image: AssetImage('assets/images/login image.png'),
+//               fit: BoxFit.cover,
+//             ),
+//           ),
+//           child: Center(
+//             child: ConstrainedBox(
+//               constraints: const BoxConstraints(maxWidth: 460),
+//               child: Card(
+//                 color: Colors.white,
+//                 elevation: 8,
+//                 shadowColor: Colors.black.withOpacity(0.08),
+//                 shape: RoundedRectangleBorder(
+//                   borderRadius: BorderRadius.circular(24),
+//                 ),
+//                 child: Padding(
+//                   padding: const EdgeInsets.symmetric(horizontal: 28.0, vertical: 32.0),
+//                   child: Form(
+//                     key: _formKey,
+//                     child: Column(
+//                       mainAxisSize: MainAxisSize.min,
+//                       crossAxisAlignment: CrossAxisAlignment.stretch,
+//                       children: [
+//                         Center(
+//                           child: Column(
+//                             children: [
+//                               SizedBox(
+//                                 height: 80,
+//                                 child: Image.asset(
+//                                   'assets/images/logo (1).png',
+//                                   fit: BoxFit.contain,
+//                                 ),
+//                               ),
+//                               const SizedBox(height: 8),
+//                               Text(
+//                                 'تسجيل الدخول',
+//                                 textAlign: TextAlign.center,
+//                                 style: Theme.of(context).textTheme.headlineSmall,
+//                               ),
+//                             ],
+//                           ),
+//                         ),
+//                         const SizedBox(height: 24),
+//                         TextFormField(
+//                           controller: _emailController,
+//                           style: const TextStyle(color: Color(0xFF111D42)),
+//                           cursorColor: const Color(0xFF111D42),
+//                           decoration: InputDecoration(
+//                             labelText: 'البريد الإلكتروني',
+//                             labelStyle: const TextStyle(color: Color(0xFFADB9D8)),
+//                             filled: true,
+//                             fillColor: const Color(0xFFF4F7FF),
+//                             prefixIcon: const Icon(
+//                               Icons.email,
+//                               color: Color(0xFFADB9D8),
+//                             ),
+//                             enabledBorder: OutlineInputBorder(
+//                               borderRadius: BorderRadius.circular(12),
+//                               borderSide: const BorderSide(
+//                                 color: Color(0xFFADB9D8),
+//                               ),
+//                             ),
+//                             focusedBorder: OutlineInputBorder(
+//                               borderRadius: BorderRadius.circular(12),
+//                               borderSide: const BorderSide(
+//                                 color: Color(0xFFADB9D8),
+//                                 width: 1.5,
+//                               ),
+//                             ),
+//                           ),
+//                           validator: (value) {
+//                             if (value == null || value.isEmpty) {
+//                               return 'الرجاء إدخال البريد الإلكتروني';
+//                             }
+//                             return null;
+//                           },
+//                         ),
+//                         const SizedBox(height: 16),
+//                         TextFormField(
+//                           controller: _passwordController,
+//                           style: const TextStyle(color: Color(0xFF111D42)),
+//                           cursorColor: const Color(0xFF111D42),
+//                           decoration: InputDecoration(
+//                             labelText: 'كلمة المرور',
+//                             labelStyle: const TextStyle(color: Color(0xFFADB9D8)),
+//                             filled: true,
+//                             fillColor: const Color(0xFFF4F7FF),
+//                             prefixIcon: const Icon(
+//                               Icons.lock,
+//                               color: Color(0xFFADB9D8),
+//                             ),
+//                             enabledBorder: OutlineInputBorder(
+//                               borderRadius: BorderRadius.circular(12),
+//                               borderSide: const BorderSide(
+//                                 color: Color(0xFFADB9D8),
+//                               ),
+//                             ),
+//                             focusedBorder: OutlineInputBorder(
+//                               borderRadius: BorderRadius.circular(12),
+//                               borderSide: const BorderSide(
+//                                 color: Color(0xFFADB9D8),
+//                                 width: 1.5,
+//                               ),
+//                             ),
+//                           ),
+//                           obscureText: true,
+//                           validator: (value) {
+//                             if (value == null || value.isEmpty) {
+//                               return 'الرجاء إدخال كلمة المرور';
+//                             }
+//                             return null;
+//                           },
+//                         ),
+//                         const SizedBox(height: 24),
+//                         SizedBox(
+//                           height: 50,
+//                           child: ElevatedButton(
+//                             style: ElevatedButton.styleFrom(
+//                               backgroundColor: const Color(0xFF1E3A8A),
+//                               foregroundColor: Colors.white,
+//                               elevation: 2,
+//                               shadowColor: Colors.black.withOpacity(0.15),
+//                               shape: RoundedRectangleBorder(
+//                                 borderRadius: BorderRadius.circular(16),
+//                               ),
+//                             ),
+//                             onPressed: _onLogin,
+//                             child: const Text(
+//                               ' تسجيل دخول',
+//                               style: TextStyle(
+//                                 fontWeight: FontWeight.bold,
+//                                 fontSize: 16,
+//                               ),
+//                             ),
+//                           ),
+//                         ),
+//                       ],
+//                     ),
+//                   ),
+//                 ),
+//               ),
+//             ),
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+// }
+
+

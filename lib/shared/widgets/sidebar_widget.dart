@@ -23,7 +23,7 @@ class SideBar extends StatelessWidget {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFFF6F8FF),
+              Color(0xFFFFFFFF),
               Color(0xFFFFFFFF),
             ],
           ),
@@ -43,12 +43,11 @@ class SideBar extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const _SidebarBrand(),
-            const SizedBox(height: 18),
-            const _SidebarUserCard(),
-            const SizedBox(height: 26),
+          //  const SizedBox(height: 10),
+           // const _SidebarUserCard(),
+            const SizedBox(height: 16),
             Expanded(
-              child: ListView(
-                padding: EdgeInsets.zero,
+              child: Column(
                 children: [
                   _SidebarItem(
                     icon: Icons.home_outlined,
@@ -85,17 +84,30 @@ class SideBar extends StatelessWidget {
                     isSelected: selectedKey == 'profile',
                     onTap: onItemSelected,
                   ),
+                  _SidebarItem(
+                    icon: Icons.person_add,
+                    label: 'إنشاء حساب موظف',
+                    keyValue: 'registerEmployee',
+                    isSelected: selectedKey == 'registerEmployee',
+                    onTap: onItemSelected,
+                  ),
+                  _SidebarItem(
+                    icon: Icons.people_outline,
+                    label: 'معلومات الموظفين والمستخدمين',
+                    keyValue: 'users',
+                    isSelected: selectedKey == 'users',
+                    onTap: onItemSelected,
+                  ),
                 ],
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             _SidebarItem(
               icon: Icons.logout,
               label: 'تسجيل الخروج',
               keyValue: 'logout',
               isSelected: false,
               onTap: onItemSelected,
-              iconColor: Colors.redAccent,
             ),
           ],
         ),
@@ -109,127 +121,116 @@ class _SidebarBrand extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
       children: [
-        Container(
-          width: 46,
-          height: 46,
-          decoration: BoxDecoration(
-            color: const Color(0xFFEEF1FF),
-            borderRadius: BorderRadius.circular(16),
+        SizedBox(
+          width: 130,
+          height: 60,
+          child: Image.asset(
+            'assets/images/logo (1).png',
+            fit: BoxFit.contain,
           ),
-          child: const Icon(Icons.change_history, color: Color(0xFF3D56F0)),
         ),
-        const SizedBox(width: 12),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
-            Text(
-              'صوت الشعب',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-            SizedBox(height: 2),
-            Text(
-              "People's Voice",
-              style: TextStyle(color: Colors.black45, fontSize: 12),
-            ),
-          ],
-        ),
-        const Spacer(),
-        IconButton(
-          icon: const Icon(Icons.menu_open, color: Color(0xFF3D56F0)),
-          onPressed: () {},
+        const SizedBox(height: 8),
+        const Text(
+          'لوحة تحكم الأدمن',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+            color: Color(0xFF4F5878),
+          ),
+          textAlign: TextAlign.center,
         ),
       ],
     );
   }
 }
 
-class _SidebarUserCard extends StatelessWidget {
-  const _SidebarUserCard();
+// class _SidebarUserCard extends StatelessWidget {
+//   const _SidebarUserCard();
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 24,
-            offset: const Offset(0, 12),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              const CircleAvatar(
-                radius: 28,
-                backgroundColor: Color(0xFF3E68FF),
-                child: Icon(Icons.person, color: Colors.white, size: 28),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    Text(
-                      'رنيم الأمين',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      'ranima@gmail.com',
-                      style: TextStyle(color: Colors.black45, fontSize: 12),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF2F4FF),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child:
-                    const Icon(Icons.notifications, color: Color(0xFF9DA8D2)),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFEEF2FF),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              children: const [
-                Icon(Icons.verified, size: 18, color: Color(0xFF4E5BA6)),
-                SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'موظف خدمة المواطنين',
-                    style: TextStyle(
-                      color: Color(0xFF4E5BA6),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return Container(
+//       padding: const EdgeInsets.all(18),
+//       decoration: BoxDecoration(
+//         color: Colors.white,
+//         borderRadius: BorderRadius.circular(28),
+//         boxShadow: [
+//           BoxShadow(
+//             color: Colors.black.withOpacity(0.04),
+//             blurRadius: 24,
+//             offset: const Offset(0, 12),
+//           ),
+//         ],
+//       ),
+//       // child: Column(
+//       //   children: [
+//       //     Row(
+//       //       children: [
+//       //         const CircleAvatar(
+//       //           radius: 28,
+//       //           backgroundColor: Color(0xFF3E68FF),
+//       //           child: Icon(Icons.person, color: Colors.white, size: 28),
+//       //         ),
+//       //         const SizedBox(width: 12),
+//       //         Expanded(
+//       //           child: Column(
+//       //             crossAxisAlignment: CrossAxisAlignment.start,
+//       //             children: const [
+//       //               Text(
+//       //                 'رنيم الأمين',
+//       //                 style: TextStyle(fontWeight: FontWeight.bold),
+//       //               ),
+//       //               SizedBox(height: 4),
+//       //               Text(
+//       //                 'ranima@gmail.com',
+//       //                 style: TextStyle(color: Colors.black45, fontSize: 12),
+//       //               ),
+//       //             ],
+//       //           ),
+//       //         ),
+//       //         Container(
+//       //           width: 36,
+//       //           height: 36,
+//       //           decoration: BoxDecoration(
+//       //             color: const Color(0xFFF2F4FF),
+//       //             borderRadius: BorderRadius.circular(12),
+//       //           ),
+//       //           child:
+//       //               const Icon(Icons.notifications, color: Color(0xFF9DA8D2)),
+//       //         ),
+//       //       ],
+//       //     ),
+//       //     const SizedBox(height: 16),
+//       //     Container(
+//       //       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+//       //       decoration: BoxDecoration(
+//       //         color: const Color(0xFFEEF2FF),
+//       //         borderRadius: BorderRadius.circular(20),
+//       //       ),
+//       //       child: Row(
+//       //         children: const [
+//       //           Icon(Icons.verified, size: 18, color: Color(0xFF4E5BA6)),
+//       //           SizedBox(width: 8),
+//       //           Expanded(
+//       //             child: Text(
+//       //               'موظف خدمة المواطنين',
+//       //               style: TextStyle(
+//       //                 color: Color(0xFF4E5BA6),
+//       //                 fontSize: 12,
+//       //                 fontWeight: FontWeight.w600,
+//       //               ),
+//       //             ),
+//       //           ),
+//       //         ],
+//       //       ),
+//       //     ),
+//       //   ],
+//       // ),
+//     );
+//   }
+// }
 
 class _SidebarItem extends StatelessWidget {
   final IconData icon;
@@ -250,45 +251,33 @@ class _SidebarItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final selectedColor = const Color(0xFF3E68FF);
+    final selectedColor = const Color(0xFF4DA6FF);
     final baseColor = const Color(0xFF4F5878);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: InkWell(
         onTap: () => onTap?.call(keyValue),
         borderRadius: BorderRadius.circular(22),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 14),
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
           decoration: BoxDecoration(
-            color: isSelected ? Colors.white : Colors.transparent,
+            color: Colors.transparent,
             borderRadius: BorderRadius.circular(22),
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 22,
-                      offset: const Offset(0, 8),
-                    ),
-                  ]
-                : [],
           ),
           child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: (isSelected
-                          ? selectedColor.withOpacity(0.12)
-                          : const Color(0xFFE9ECF7))
-                      .withOpacity(iconColor != null ? 0.18 : 1),
+                  color: const Color(0xFFE9ECF7),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(
                   icon,
                   color: iconColor ?? (isSelected ? selectedColor : baseColor),
-                  size: 20,
+                  size: 18,
                 ),
               ),
               const SizedBox(width: 12),
@@ -303,8 +292,6 @@ class _SidebarItem extends StatelessWidget {
                   ),
                 ),
               ),
-              if (isSelected)
-                const Icon(Icons.chevron_left, color: Color(0xFF3E68FF)),
             ],
           ),
         ),

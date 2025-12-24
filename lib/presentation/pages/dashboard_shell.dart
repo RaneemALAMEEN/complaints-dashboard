@@ -1,11 +1,18 @@
+import 'package:complaints/features/auth/presentation/register_employee_page.dart';
 import 'package:complaints/presentation/pages/all_complaints_page.dart';
+import 'package:complaints/presentation/pages/all_users_page.dart';
 import 'package:complaints/presentation/pages/dashboard_page.dart';
 import 'package:complaints/presentation/pages/notifications_page.dart';
 import 'package:complaints/presentation/pages/profile_page.dart';
 import 'package:complaints/presentation/pages/reports_page.dart';
 import 'package:complaints/presentation/widgets/dashboard_app_bar.dart';
 import 'package:complaints/shared/widgets/sidebar_widget.dart';
+import 'package:complaints/features/auth/presentation/bloc/employee_bloc.dart';
+import 'package:complaints/features/auth/data/repositories/employee_repository_impl.dart';
+import 'package:complaints/features/auth/data/sources/employee_remote_data_source.dart';
+import 'package:complaints/core/network/dio_client.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class DashboardShell extends StatefulWidget {
   const DashboardShell({super.key});
@@ -15,7 +22,7 @@ class DashboardShell extends StatefulWidget {
 }
 
 class _DashboardShellState extends State<DashboardShell> {
-  String _selectedKey = 'complaints';
+  String _selectedKey = 'dashboard';
 
   late final Map<String, _SectionConfig> _sections = {
     'dashboard': _SectionConfig(
@@ -42,6 +49,23 @@ class _DashboardShellState extends State<DashboardShell> {
       title: 'الملف الشخصي',
       subtitle: 'يمكنك تعديل بياناتك ومعلوماتك هنا',
       builder: () => const ProfileContent(),
+    ),
+    'registerEmployee': _SectionConfig(
+      title: 'إنشاء حساب موظف',
+      subtitle: 'أدخل بيانات الموظف الجديد',
+      builder: () => BlocProvider(
+        create: (_) => EmployeeBloc(
+          EmployeeRepositoryImpl(
+            EmployeeRemoteDataSource(DioClient().dio),
+          ),
+        ),
+        child: const RegisterEmployeePage(),
+      ),
+    ),
+    'users': _SectionConfig(
+      title: 'معلومات الموظفين والمستخدمين',
+      subtitle: 'عرض معلومات جميع الموظفين والمواطنين',
+      builder: () => const UsersContent(),
     ),
   };
 
