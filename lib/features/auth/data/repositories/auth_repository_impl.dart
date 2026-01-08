@@ -1,5 +1,4 @@
 import '../../domain/entities/login_result.dart';
-import '../../domain/entities/user.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../sources/auth_remote_data_source.dart';
 
@@ -17,13 +16,8 @@ class AuthRepositoryImpl implements AuthRepository {
 
     final userData = data['user'];
     final token = data['token'] ?? '';
-    final user = User(
-      id: userData['id'],
-      firstName: userData['first_name'],
-      lastName: userData['last_name'],
-    );
 
-    return LoginResult(user: user, token: token);
+    return LoginResult(user: userData, token: token);
   }
 
   Future<Map<String, dynamic>> registerEmployee({

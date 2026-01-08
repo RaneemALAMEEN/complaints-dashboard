@@ -16,6 +16,13 @@ class AuthRemoteDataSource {
         "password": password,
       },
     );
+    
+    // Print the complete response to see permissions
+    print('=== LOGIN RESPONSE ===');
+    print('Status Code: ${response.statusCode}');
+    print('Response Data: ${response.data}');
+    print('====================');
+    
     return response.data; // نرجع Map مباشرة
   }
 

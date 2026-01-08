@@ -19,13 +19,12 @@ class SideBar extends StatelessWidget {
         width: 290,
         padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
+          gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFFFFFFFF),
-              Color(0xFFFFFFFF),
-            ],
+            colors: Theme.of(context).brightness == Brightness.dark
+                ? [const Color(0xFF1E293B), const Color(0xFF1E293B)]
+                : [const Color(0xFFFFFFFF), const Color(0xFFFFFFFF)],
           ),
           borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(44),
@@ -33,7 +32,7 @@ class SideBar extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.06),
+              color: Colors.black.withOpacity(Theme.of(context).brightness == Brightness.dark ? 0.3 : 0.06),
               blurRadius: 45,
               offset: const Offset(-8, 0),
             ),
@@ -132,12 +131,14 @@ class _SidebarBrand extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        const Text(
+        Text(
           'لوحة تحكم الأدمن',
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 14,
-            color: Color(0xFF4F5878),
+            color: Theme.of(context).brightness == Brightness.dark 
+                ? Colors.white 
+                : const Color(0xFF4F5878),
           ),
           textAlign: TextAlign.center,
         ),
@@ -252,7 +253,9 @@ class _SidebarItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final selectedColor = const Color(0xFF4DA6FF);
-    final baseColor = const Color(0xFF4F5878);
+    final baseColor = Theme.of(context).brightness == Brightness.dark 
+        ? Colors.white 
+        : const Color(0xFF4F5878);
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -263,7 +266,11 @@ class _SidebarItem extends StatelessWidget {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
           decoration: BoxDecoration(
-            color: Colors.transparent,
+            color: isSelected 
+                ? (Theme.of(context).brightness == Brightness.dark 
+                    ? Colors.white.withOpacity(0.1) 
+                    : const Color(0xFFE9ECF7))
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(22),
           ),
           child: Row(
@@ -271,7 +278,9 @@ class _SidebarItem extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE9ECF7),
+                  color: Theme.of(context).brightness == Brightness.dark 
+                      ? Colors.white.withOpacity(0.1)
+                      : const Color(0xFFE9ECF7),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(

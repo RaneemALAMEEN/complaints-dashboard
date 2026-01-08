@@ -1,7 +1,5 @@
-import 'package:complaints/features/auth/domain/entities/user.dart';
-
 class LoginResult {
-  final User user;
+  final Map<String, dynamic> user;
   final String token;
 
   LoginResult({

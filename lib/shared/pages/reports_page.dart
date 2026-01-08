@@ -1,0 +1,11 @@
+import 'package:complaints/shared/widgets/placeholder_card.dart';
+import 'package:flutter/material.dart';
+
+class ReportsContent extends StatelessWidget {
+  const ReportsContent({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const PlaceholderCard(text: 'التقارير قيد التطوير حالياً');
+  }
+}

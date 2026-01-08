@@ -1,7 +1,8 @@
 import 'package:complaints/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:complaints/features/auth/presentation/bloc/auth_event.dart';
 import 'package:complaints/features/auth/presentation/bloc/auth_state.dart';
-import 'package:complaints/presentation/pages/dashboard_shell.dart';
+import 'package:complaints/features/dashboard/presentation/pages/dashboard_shell.dart';
+import 'package:complaints/core/services/permissions_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -41,8 +42,11 @@ class _LoginPageState extends State<LoginPage> {
       textDirection: TextDirection.rtl,
       child: Scaffold(
         body: BlocListener<AuthBloc, AuthState>(
-          listener: (context, state) {
+          listener: (context, state) async {
             if (state is AuthSuccess) {
+              // Save user permissions and token
+              await PermissionsService.saveUser(state.user, state.token);
+              
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(
@@ -51,7 +55,10 @@ class _LoginPageState extends State<LoginPage> {
               );
             } else if (state is AuthFailure) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.message)),
+                SnackBar(
+                  content: Text(state.message),
+                  backgroundColor: Colors.red,
+                ),
               );
             }
           },
@@ -95,9 +102,11 @@ class _LoginPageState extends State<LoginPage> {
                                 Text(
                                   'تسجيل الدخول',
                                   textAlign: TextAlign.center,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .headlineSmall,
+                                  style: const TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF111D42),
+                                  ),
                                 ),
                               ],
                             ),

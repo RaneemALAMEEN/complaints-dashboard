@@ -17,7 +17,7 @@ class EmployeeRemoteDataSource {
   }) async {
     try {
       final response = await dio.post(
-        '/auth/registerAdmin',
+        '/api/auth/registerAdmin',
         data: {
           "first_name": firstName,
           "last_name": lastName,

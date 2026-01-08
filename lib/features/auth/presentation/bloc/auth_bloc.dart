@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
 import '../../data/repositories/auth_repository_impl.dart';
+import 'package:complaints/core/models/permission.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepositoryImpl repository;
@@ -16,7 +17,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         // حفظ التوكن
         await saveToken(result.token);
 
-        emit(AuthSuccess(result.token));
+        // Parse user data from result
+        final user = User.fromJson(result.user);
+        
+        emit(AuthSuccess(user, result.token));
       } catch (e, stackTrace) {
         print('Login Error: $e');
         print('StackTrace: $stackTrace');

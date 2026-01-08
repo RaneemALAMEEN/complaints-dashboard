@@ -18,10 +18,33 @@ class _RegisterEmployeePageState extends State<RegisterEmployeePage> {
   final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _governmentController = TextEditingController();
   final _phoneController = TextEditingController();
   final _permissionsController = TextEditingController();
   List<int> permissionList = [];
+  String? _selectedGovernmentEntity;
+  final List<String> _governmentEntities = [
+    'كهرباء',
+    'ماء',
+    'صحة',
+    'تعليم',
+    'داخلية',
+    'مالية',
+  ];
+  final List<Map<String, dynamic>> _availablePermissions = [
+    // Employee Permissions
+    {'id': 8 , 'label': 'عرض الشكاوى المسندة للموظف حسب الجهة الخاصة به', 'group': 'موظف'},
+    {'id': 9, 'label': 'تعديل حالة الشكوى من قبل الموظف', 'group': 'موظف'},
+    // Admin Permissions
+    {'id': 1, 'label': 'إنشاء حسابات موظفين', 'group': 'أدمن'},
+    {'id': 10, 'label': 'عرض جميع الشكاوى', 'group': 'أدمن'},
+    {'id': 11, 'label': 'إدارة الصلاحيات', 'group': 'أدمن'},
+    {'id': 12, 'label': 'عرض سجل الشكاوى', 'group': 'أدمن'},
+    {'id': 13, 'label': 'عرض جميع الصلاحيات', 'group': 'أدمن'},
+  ];
+
+  String _getPermissionLabels(List<int> ids) {
+    return ids.map((id) => _availablePermissions.firstWhere((p) => p['id'] == id)['label'] as String).join(', ');
+  }
 
   late String token;
 
@@ -47,7 +70,6 @@ class _RegisterEmployeePageState extends State<RegisterEmployeePage> {
     _lastNameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
-    _governmentController.dispose();
     _phoneController.dispose();
     _permissionsController.dispose();
     super.dispose();
@@ -61,24 +83,111 @@ class _RegisterEmployeePageState extends State<RegisterEmployeePage> {
       return;
     }
     if (_formKey.currentState?.validate() ?? false) {
-      final permissions = _permissionsController.text
-          .split(',')
-          .map((e) => int.tryParse(e.trim()) ?? 0)
-          .where((e) => e > 0)
-          .toList();
+      final permissions = permissionList.isNotEmpty
+          ? permissionList
+          : _permissionsController.text
+              .split(',')
+              .map((e) => int.tryParse(e.trim()) ?? 0)
+              .where((e) => e > 0)
+              .toList();
       context.read<EmployeeBloc>().add(
             RegisterEmployeeRequested(
               firstName: _firstNameController.text,
               lastName: _lastNameController.text,
               email: _emailController.text,
               password: _passwordController.text,
-              governmentEntity: _governmentController.text,
+              governmentEntity: _selectedGovernmentEntity ?? '',
               phone: _phoneController.text,
               permissionId: permissions,
               token: token,
             ),
           );
     }
+  }
+
+  Future<void> _showPermissionPicker() async {
+    final selected = Set<int>.from(permissionList);
+    final employeePermissions = _availablePermissions.where((p) => p['group'] == 'موظف').toList();
+    final adminPermissions = _availablePermissions.where((p) => p['group'] == 'أدمن').toList();
+    await showDialog<void>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('اختر الصلاحيات'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('صلاحيات موظف', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                const SizedBox(height: 8),
+                ...employeePermissions.map((p) {
+                  final id = p['id'] as int;
+                  final label = p['label'] as String;
+                  return StatefulBuilder(
+                    builder: (context, setStateDialog) {
+                      return CheckboxListTile(
+                        value: selected.contains(id),
+                        title: Text(label),
+                        onChanged: (v) {
+                          setStateDialog(() {
+                            if (v == true) {
+                              selected.add(id);
+                            } else {
+                              selected.remove(id);
+                            }
+                          });
+                        },
+                      );
+                    },
+                  );
+                }),
+                const SizedBox(height: 16),
+                const Text('صلاحيات أدمن', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                const SizedBox(height: 8),
+                ...adminPermissions.map((p) {
+                  final id = p['id'] as int;
+                  final label = p['label'] as String;
+                  return StatefulBuilder(
+                    builder: (context, setStateDialog) {
+                      return CheckboxListTile(
+                        value: selected.contains(id),
+                        title: Text(label),
+                        onChanged: (v) {
+                          setStateDialog(() {
+                            if (v == true) {
+                              selected.add(id);
+                            } else {
+                              selected.remove(id);
+                            }
+                          });
+                        },
+                      );
+                    },
+                  );
+                }),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('إلغاء'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  permissionList = selected.toList()..sort();
+                  _permissionsController.text = _getPermissionLabels(permissionList);
+                });
+                Navigator.of(context).pop();
+              },
+              child: const Text('تأكيد'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -111,19 +220,21 @@ class _RegisterEmployeePageState extends State<RegisterEmployeePage> {
               );
             }
             return Container(
-              decoration: const BoxDecoration(
-                image: DecorationImage(
-                  image: AssetImage('assets/images/login image.png'),
-                  fit: BoxFit.cover,
-                ),
+              decoration: BoxDecoration(
+                image: Theme.of(context).brightness == Brightness.dark
+                    ? null
+                    : const DecorationImage(
+                        image: AssetImage('assets/images/login image.png'),
+                        fit: BoxFit.cover,
+                      ),
               ),
               child: Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 460),
                   child: Card(
-                    color: Colors.white,
+                    color: Theme.of(context).cardTheme.color,
                     elevation: 8,
-                    shadowColor: Colors.black.withOpacity(0.08),
+                    shadowColor: Colors.black.withOpacity(Theme.of(context).brightness == Brightness.dark ? 0.3 : 0.08),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(24),
                     ),
@@ -164,30 +275,46 @@ class _RegisterEmployeePageState extends State<RegisterEmployeePage> {
                                   Expanded(
                                     child: TextFormField(
                                       controller: _firstNameController,
-                                      style:
-                                          const TextStyle(color: Color(0xFF111D42)),
-                                      cursorColor: const Color(0xFF111D42),
+                                      style: TextStyle(
+                                        color: Theme.of(context).brightness == Brightness.dark 
+                                            ? Colors.white
+                                            : const Color(0xFF111D42),
+                                      ),
+                                      cursorColor: Theme.of(context).brightness == Brightness.dark 
+                                          ? Theme.of(context).colorScheme.primary
+                                          : const Color(0xFF111D42),
                                       decoration: InputDecoration(
                                         labelText: 'الاسم الأول',
-                                        labelStyle:
-                                            const TextStyle(color: Color(0xFFADB9D8)),
+                                        labelStyle: TextStyle(
+                                          color: Theme.of(context).brightness == Brightness.dark 
+                                              ? const Color(0xFFCBD5E1)
+                                              : const Color(0xFFADB9D8),
+                                        ),
                                         filled: true,
-                                        fillColor: const Color(0xFFF4F7FF),
-                                        prefixIcon: const Icon(
+                                        fillColor: Theme.of(context).brightness == Brightness.dark 
+                                            ? const Color(0xFF334155)
+                                            : const Color(0xFFF4F7FF),
+                                        prefixIcon: Icon(
                                           Icons.person,
-                                          color: Color(0xFFADB9D8),
+                                          color: Theme.of(context).brightness == Brightness.dark 
+                                              ? const Color(0xFF94A3B8)
+                                              : const Color(0xFFADB9D8),
                                         ),
                                         enabledBorder: OutlineInputBorder(
                                           borderRadius: BorderRadius.circular(12),
-                                          borderSide: const BorderSide(
-                                            color: Color(0xFFADB9D8),
+                                          borderSide: BorderSide(
+                                            color: Theme.of(context).brightness == Brightness.dark 
+                                                ? const Color(0xFF475569)
+                                                : const Color(0xFFADB9D8),
                                           ),
                                         ),
                                         focusedBorder: OutlineInputBorder(
                                           borderRadius: BorderRadius.circular(12),
-                                          borderSide: const BorderSide(
-                                            color: Color(0xFFADB9D8),
-                                            width: 1.5,
+                                          borderSide: BorderSide(
+                                            color: Theme.of(context).brightness == Brightness.dark 
+                                                ? Colors.deepPurple
+                                                : const Color(0xFFADB9D8),
+                                            width: 2,
                                           ),
                                         ),
                                       ),
@@ -198,30 +325,46 @@ class _RegisterEmployeePageState extends State<RegisterEmployeePage> {
                                   Expanded(
                                     child: TextFormField(
                                       controller: _lastNameController,
-                                      style:
-                                          const TextStyle(color: Color(0xFF111D42)),
-                                      cursorColor: const Color(0xFF111D42),
+                                      style: TextStyle(
+                                        color: Theme.of(context).brightness == Brightness.dark 
+                                            ? Colors.white
+                                            : const Color(0xFF111D42),
+                                      ),
+                                      cursorColor: Theme.of(context).brightness == Brightness.dark 
+                                          ? Theme.of(context).colorScheme.primary
+                                          : const Color(0xFF111D42),
                                       decoration: InputDecoration(
                                         labelText: 'اسم العائلة',
-                                        labelStyle:
-                                            const TextStyle(color: Color(0xFFADB9D8)),
+                                        labelStyle: TextStyle(
+                                          color: Theme.of(context).brightness == Brightness.dark 
+                                              ? const Color(0xFFCBD5E1)
+                                              : const Color(0xFFADB9D8),
+                                        ),
                                         filled: true,
-                                        fillColor: const Color(0xFFF4F7FF),
-                                        prefixIcon: const Icon(
+                                        fillColor: Theme.of(context).brightness == Brightness.dark 
+                                            ? const Color(0xFF334155)
+                                            : const Color(0xFFF4F7FF),
+                                        prefixIcon: Icon(
                                           Icons.person,
-                                          color: Color(0xFFADB9D8),
+                                          color: Theme.of(context).brightness == Brightness.dark 
+                                              ? const Color(0xFF94A3B8)
+                                              : const Color(0xFFADB9D8),
                                         ),
                                         enabledBorder: OutlineInputBorder(
                                           borderRadius: BorderRadius.circular(12),
-                                          borderSide: const BorderSide(
-                                            color: Color(0xFFADB9D8),
+                                          borderSide: BorderSide(
+                                            color: Theme.of(context).brightness == Brightness.dark 
+                                                ? const Color(0xFF475569)
+                                                : const Color(0xFFADB9D8),
                                           ),
                                         ),
                                         focusedBorder: OutlineInputBorder(
                                           borderRadius: BorderRadius.circular(12),
-                                          borderSide: const BorderSide(
-                                            color: Color(0xFFADB9D8),
-                                            width: 1.5,
+                                          borderSide: BorderSide(
+                                            color: Theme.of(context).brightness == Brightness.dark 
+                                                ? Colors.deepPurple
+                                                : const Color(0xFFADB9D8),
+                                            width: 2,
                                           ),
                                         ),
                                       ),
@@ -233,30 +376,46 @@ class _RegisterEmployeePageState extends State<RegisterEmployeePage> {
                               const SizedBox(height: 16),
                               TextFormField(
                                 controller: _emailController,
-                                style:
-                                    const TextStyle(color: Color(0xFF111D42)),
-                                cursorColor: const Color(0xFF111D42),
+                                style: TextStyle(
+                                  color: Theme.of(context).brightness == Brightness.dark 
+                                      ? Colors.white
+                                      : const Color(0xFF111D42),
+                                ),
+                                cursorColor: Theme.of(context).brightness == Brightness.dark 
+                                    ? Theme.of(context).colorScheme.primary
+                                    : const Color(0xFF111D42),
                                 decoration: InputDecoration(
                                   labelText: 'البريد الإلكتروني',
-                                  labelStyle:
-                                      const TextStyle(color: Color(0xFFADB9D8)),
+                                  labelStyle: TextStyle(
+                                    color: Theme.of(context).brightness == Brightness.dark 
+                                        ? const Color(0xFFCBD5E1)
+                                        : const Color(0xFFADB9D8),
+                                  ),
                                   filled: true,
-                                  fillColor: const Color(0xFFF4F7FF),
-                                  prefixIcon: const Icon(
+                                  fillColor: Theme.of(context).brightness == Brightness.dark 
+                                      ? const Color(0xFF334155)
+                                      : const Color(0xFFF4F7FF),
+                                  prefixIcon: Icon(
                                     Icons.email,
-                                    color: Color(0xFFADB9D8),
+                                    color: Theme.of(context).brightness == Brightness.dark 
+                                        ? const Color(0xFF94A3B8)
+                                        : const Color(0xFFADB9D8),
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: const BorderSide(
-                                      color: Color(0xFFADB9D8),
+                                    borderSide: BorderSide(
+                                      color: Theme.of(context).brightness == Brightness.dark 
+                                          ? const Color(0xFF475569)
+                                          : const Color(0xFFADB9D8),
                                     ),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: const BorderSide(
-                                      color: Color(0xFFADB9D8),
-                                      width: 1.5,
+                                    borderSide: BorderSide(
+                                      color: Theme.of(context).brightness == Brightness.dark 
+                                          ? Colors.deepPurple
+                                          : const Color(0xFFADB9D8),
+                                      width: 2,
                                     ),
                                   ),
                                 ),
@@ -265,30 +424,46 @@ class _RegisterEmployeePageState extends State<RegisterEmployeePage> {
                               const SizedBox(height: 16),
                               TextFormField(
                                 controller: _passwordController,
-                                style:
-                                    const TextStyle(color: Color(0xFF111D42)),
-                                cursorColor: const Color(0xFF111D42),
+                                style: TextStyle(
+                                  color: Theme.of(context).brightness == Brightness.dark 
+                                      ? Colors.white
+                                      : const Color(0xFF111D42),
+                                ),
+                                cursorColor: Theme.of(context).brightness == Brightness.dark 
+                                    ? Theme.of(context).colorScheme.primary
+                                    : const Color(0xFF111D42),
                                 decoration: InputDecoration(
                                   labelText: 'كلمة المرور',
-                                  labelStyle:
-                                      const TextStyle(color: Color(0xFFADB9D8)),
+                                  labelStyle: TextStyle(
+                                    color: Theme.of(context).brightness == Brightness.dark 
+                                        ? const Color(0xFFCBD5E1)
+                                        : const Color(0xFFADB9D8),
+                                  ),
                                   filled: true,
-                                  fillColor: const Color(0xFFF4F7FF),
-                                  prefixIcon: const Icon(
+                                  fillColor: Theme.of(context).brightness == Brightness.dark 
+                                      ? const Color(0xFF334155)
+                                      : const Color(0xFFF4F7FF),
+                                  prefixIcon: Icon(
                                     Icons.lock,
-                                    color: Color(0xFFADB9D8),
+                                    color: Theme.of(context).brightness == Brightness.dark 
+                                        ? const Color(0xFF94A3B8)
+                                        : const Color(0xFFADB9D8),
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: const BorderSide(
-                                      color: Color(0xFFADB9D8),
+                                    borderSide: BorderSide(
+                                      color: Theme.of(context).brightness == Brightness.dark 
+                                          ? const Color(0xFF475569)
+                                          : const Color(0xFFADB9D8),
                                     ),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: const BorderSide(
-                                      color: Color(0xFFADB9D8),
-                                      width: 1.5,
+                                    borderSide: BorderSide(
+                                      color: Theme.of(context).brightness == Brightness.dark 
+                                          ? Colors.deepPurple
+                                          : const Color(0xFFADB9D8),
+                                      width: 2,
                                     ),
                                   ),
                                 ),
@@ -296,100 +471,166 @@ class _RegisterEmployeePageState extends State<RegisterEmployeePage> {
                                 validator: (v) => v!.isEmpty ? 'الرجاء إدخال كلمة المرور' : null,
                               ),
                               const SizedBox(height: 16),
-                              TextFormField(
-                                controller: _governmentController,
-                                style:
-                                    const TextStyle(color: Color(0xFF111D42)),
-                                cursorColor: const Color(0xFF111D42),
+                              DropdownButtonFormField<String>(
+                                value: _selectedGovernmentEntity,
                                 decoration: InputDecoration(
                                   labelText: 'الجهة الحكومية',
-                                  labelStyle:
-                                      const TextStyle(color: Color(0xFFADB9D8)),
+                                  labelStyle: TextStyle(
+                                    color: Theme.of(context).brightness == Brightness.dark 
+                                        ? const Color(0xFFCBD5E1)
+                                        : const Color(0xFFADB9D8),
+                                  ),
                                   filled: true,
-                                  fillColor: const Color(0xFFF4F7FF),
-                                  prefixIcon: const Icon(
+                                  fillColor: Theme.of(context).brightness == Brightness.dark 
+                                      ? const Color(0xFF334155)
+                                      : const Color(0xFFF4F7FF),
+                                  prefixIcon: Icon(
                                     Icons.business,
-                                    color: Color(0xFFADB9D8),
+                                    color: Theme.of(context).brightness == Brightness.dark 
+                                        ? const Color(0xFF94A3B8)
+                                        : const Color(0xFFADB9D8),
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: const BorderSide(
-                                      color: Color(0xFFADB9D8),
+                                    borderSide: BorderSide(
+                                      color: Theme.of(context).brightness == Brightness.dark 
+                                          ? const Color(0xFF475569)
+                                          : const Color(0xFFADB9D8),
                                     ),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: const BorderSide(
-                                      color: Color(0xFFADB9D8),
-                                      width: 1.5,
+                                    borderSide: BorderSide(
+                                      color: Theme.of(context).brightness == Brightness.dark 
+                                          ? Colors.deepPurple
+                                          : const Color(0xFFADB9D8),
+                                      width: 2,
                                     ),
                                   ),
                                 ),
-                                validator: (v) => v!.isEmpty ? 'الرجاء إدخال الجهة الحكومية' : null,
+                                items: _governmentEntities.map((entity) {
+                                  return DropdownMenuItem<String>(
+                                    value: entity,
+                                    child: Text(entity),
+                                  );
+                                }).toList(),
+                                onChanged: (value) {
+                                  setState(() {
+                                    _selectedGovernmentEntity = value;
+                                  });
+                                },
+                                validator: (value) => value == null || value.isEmpty
+                                    ? 'الرجاء اختيار الجهة الحكومية'
+                                    : null,
                               ),
                               const SizedBox(height: 16),
                               TextFormField(
                                 controller: _phoneController,
-                                style:
-                                    const TextStyle(color: Color(0xFF111D42)),
-                                cursorColor: const Color(0xFF111D42),
+                                style: TextStyle(
+                                  color: Theme.of(context).brightness == Brightness.dark 
+                                      ? Colors.white
+                                      : const Color(0xFF111D42),
+                                ),
+                                cursorColor: Theme.of(context).brightness == Brightness.dark 
+                                    ? Theme.of(context).colorScheme.primary
+                                    : const Color(0xFF111D42),
                                 decoration: InputDecoration(
                                   labelText: 'رقم الهاتف',
-                                  labelStyle:
-                                      const TextStyle(color: Color(0xFFADB9D8)),
+                                  labelStyle: TextStyle(
+                                    color: Theme.of(context).brightness == Brightness.dark 
+                                        ? const Color(0xFFCBD5E1)
+                                        : const Color(0xFFADB9D8),
+                                  ),
                                   filled: true,
-                                  fillColor: const Color(0xFFF4F7FF),
-                                  prefixIcon: const Icon(
+                                  fillColor: Theme.of(context).brightness == Brightness.dark 
+                                      ? const Color(0xFF334155)
+                                      : const Color(0xFFF4F7FF),
+                                  prefixIcon: Icon(
                                     Icons.phone,
-                                    color: Color(0xFFADB9D8),
+                                    color: Theme.of(context).brightness == Brightness.dark 
+                                        ? const Color(0xFF94A3B8)
+                                        : const Color(0xFFADB9D8),
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: const BorderSide(
-                                      color: Color(0xFFADB9D8),
+                                    borderSide: BorderSide(
+                                      color: Theme.of(context).brightness == Brightness.dark 
+                                          ? const Color(0xFF475569)
+                                          : const Color(0xFFADB9D8),
                                     ),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: const BorderSide(
-                                      color: Color(0xFFADB9D8),
-                                      width: 1.5,
+                                    borderSide: BorderSide(
+                                      color: Theme.of(context).brightness == Brightness.dark 
+                                          ? Colors.deepPurple
+                                          : const Color(0xFFADB9D8),
+                                      width: 2,
                                     ),
                                   ),
                                 ),
                                 validator: (v) => v!.isEmpty ? 'الرجاء إدخال رقم الهاتف' : null,
                               ),
                               const SizedBox(height: 16),
-                              TextFormField(
-                                controller: _permissionsController,
-                                style:
-                                    const TextStyle(color: Color(0xFF111D42)),
-                                cursorColor: const Color(0xFF111D42),
-                                decoration: InputDecoration(
-                                  labelText: 'معرفات الصلاحيات (مفصولة بفواصل)',
-                                  labelStyle:
-                                      const TextStyle(color: Color(0xFFADB9D8)),
-                                  filled: true,
-                                  fillColor: const Color(0xFFF4F7FF),
-                                  prefixIcon: const Icon(
-                                    Icons.security,
-                                    color: Color(0xFFADB9D8),
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: const BorderSide(
-                                      color: Color(0xFFADB9D8),
+                              GestureDetector(
+                                onTap: _showPermissionPicker,
+                                child: AbsorbPointer(
+                                  child: TextFormField(
+                                    controller: _permissionsController,
+                                    readOnly: true,
+                                    style: TextStyle(
+                                      color: Theme.of(context).brightness == Brightness.dark 
+                                          ? Colors.white
+                                          : const Color(0xFF111D42),
                                     ),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: const BorderSide(
-                                      color: Color(0xFFADB9D8),
-                                      width: 1.5,
+                                    cursorColor: Theme.of(context).brightness == Brightness.dark 
+                                        ? Theme.of(context).colorScheme.primary
+                                        : const Color(0xFF111D42),
+                                    decoration: InputDecoration(
+                                      labelText: 'الصلاحيات المختارة',
+                                      hintText: 'اضغط لاختيار الصلاحيات',
+                                      labelStyle: TextStyle(
+                                        color: Theme.of(context).brightness == Brightness.dark 
+                                            ? const Color(0xFFCBD5E1)
+                                            : const Color(0xFFADB9D8),
+                                      ),
+                                      hintStyle: TextStyle(
+                                        color: Theme.of(context).brightness == Brightness.dark 
+                                            ? const Color(0xFF94A3B8)
+                                            : const Color(0xFFADB9D8),
+                                      ),
+                                      filled: true,
+                                      fillColor: Theme.of(context).brightness == Brightness.dark 
+                                          ? const Color(0xFF334155)
+                                          : const Color(0xFFF4F7FF),
+                                      prefixIcon: Icon(
+                                        Icons.security,
+                                        color: Theme.of(context).brightness == Brightness.dark 
+                                            ? const Color(0xFF94A3B8)
+                                            : const Color(0xFFADB9D8),
+                                      ),
+                                      suffixIcon: const Icon(Icons.arrow_drop_down),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                        borderSide: BorderSide(
+                                          color: Theme.of(context).brightness == Brightness.dark 
+                                              ? const Color(0xFF475569)
+                                              : const Color(0xFFADB9D8),
+                                        ),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                        borderSide: BorderSide(
+                                          color: Theme.of(context).brightness == Brightness.dark 
+                                              ? Colors.deepPurple
+                                              : const Color(0xFFADB9D8),
+                                          width: 2,
+                                        ),
+                                      ),
                                     ),
+                                    validator: (v) => permissionList.isEmpty ? 'الرجاء اختيار الصلاحيات' : null,
                                   ),
                                 ),
-                                validator: (v) => v!.isEmpty ? 'الرجاء إدخال معرفات الصلاحيات' : null,
                               ),
                               const SizedBox(height: 24),
                               SizedBox(
