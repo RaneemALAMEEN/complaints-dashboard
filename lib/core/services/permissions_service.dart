@@ -89,7 +89,10 @@ class PermissionsService {
   }
 
   static bool isEmployee(User? user) {
-    return user != null && user.hasPermission(Permission.employeeViewAssignedComplaints);
+    return user != null && (
+      user.hasPermission(Permission.employeeViewAssignedComplaints) ||
+      user.hasPermission(Permission.employeeUpdateComplaint)
+    );
   }
 
   static bool canUpdateComplaint(User? user) {

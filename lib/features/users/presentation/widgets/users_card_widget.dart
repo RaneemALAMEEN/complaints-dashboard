@@ -5,11 +5,31 @@ import 'user_row_widget.dart';
 class UsersCardWidget extends StatelessWidget {
   final List<User> users;
   final VoidCallback onExportTap;
+  final int totalItems;
+  final int pageSize;
+  final int currentPage;
+  final ValueChanged<int> onPageChanged;
 
-  const UsersCardWidget({required this.users, required this.onExportTap, super.key});
+  const UsersCardWidget({
+    required this.users,
+    required this.onExportTap,
+    required this.totalItems,
+    required this.pageSize,
+    required this.currentPage,
+    required this.onPageChanged,
+    super.key,
+  });
+
+  int get _totalPages {
+    if (totalItems <= 0) return 1;
+    return (totalItems / pageSize).ceil();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final totalPages = _totalPages;
+    final safeCurrentPage = currentPage.clamp(1, totalPages);
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -75,7 +95,7 @@ class UsersCardWidget extends StatelessWidget {
                   _HeaderCell(label: 'البريد الإلكتروني', flex: 3),
                   _HeaderCell(label: 'رقم الهاتف', flex: 2),
                   _HeaderCell(label: 'النوع', flex: 1),
-                  _HeaderCell(label: 'المنطقة', flex: 2),
+                  _HeaderCell(label: 'الجهة الحكومية', flex: 2),
                 ],
               ),
             ),
@@ -96,27 +116,68 @@ class UsersCardWidget extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('عرض 6 من 50'),
+              Text(
+                'عرض ${users.length} من $totalItems',
+                style: TextStyle(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white70
+                      : Colors.black54,
+                  fontSize: 14,
+                ),
+              ),
               Row(
-                children: List.generate(5, (index) {
-                  final isActive = index == 0;
-                  return Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: isActive ? const Color(0xFF3E68FF) : Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: const Color(0xFFE0E5FF)),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      '${index + 1}',
-                      style: TextStyle(
-                          color: isActive ? Colors.white : Colors.black54),
-                    ),
-                  );
-                }),
+                children: [
+                  IconButton(
+                    onPressed: safeCurrentPage > 1
+                        ? () => onPageChanged(safeCurrentPage - 1)
+                        : null,
+                    icon: const Icon(Icons.chevron_right),
+                    iconSize: 20,
+                  ),
+                  ...List.generate(totalPages > 5 ? 5 : totalPages, (index) {
+                    int pageNumber;
+                    if (totalPages <= 5) {
+                      pageNumber = index + 1;
+                    } else if (safeCurrentPage <= 3) {
+                      pageNumber = index + 1;
+                    } else if (safeCurrentPage >= totalPages - 2) {
+                      pageNumber = totalPages - 4 + index;
+                    } else {
+                      pageNumber = safeCurrentPage - 2 + index;
+                    }
+
+                    final isActive = pageNumber == safeCurrentPage;
+                    return Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: isActive
+                            ? const Color(0xFF3E68FF)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: const Color(0xFFE0E5FF)),
+                      ),
+                      alignment: Alignment.center,
+                      child: InkWell(
+                        onTap: () => onPageChanged(pageNumber),
+                        child: Text(
+                          '$pageNumber',
+                          style: TextStyle(
+                            color: isActive ? Colors.white : Colors.black54,
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+                  IconButton(
+                    onPressed: safeCurrentPage < totalPages
+                        ? () => onPageChanged(safeCurrentPage + 1)
+                        : null,
+                    icon: const Icon(Icons.chevron_left),
+                    iconSize: 20,
+                  ),
+                ],
               ),
             ],
           ),

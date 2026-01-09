@@ -63,20 +63,6 @@ class SideBar extends StatelessWidget {
                     onTap: onItemSelected,
                   ),
                   _SidebarItem(
-                    icon: Icons.bar_chart_outlined,
-                    label: 'التقارير والإحصائيات',
-                    keyValue: 'reports',
-                    isSelected: selectedKey == 'reports',
-                    onTap: onItemSelected,
-                  ),
-                  _SidebarItem(
-                    icon: Icons.notifications_none,
-                    label: 'الإشعارات',
-                    keyValue: 'notifications',
-                    isSelected: selectedKey == 'notifications',
-                    onTap: onItemSelected,
-                  ),
-                  _SidebarItem(
                     icon: Icons.person_outline,
                     label: 'الملف الشخصي',
                     keyValue: 'profile',
@@ -132,7 +118,7 @@ class _SidebarBrand extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          'لوحة تحكم الأدمن',
+          'لوحة التحكم',
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 14,

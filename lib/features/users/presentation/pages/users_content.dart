@@ -1,5 +1,8 @@
 import 'dart:io';
+import 'package:complaints/features/users/presentation/bloc/user_bloc.dart';
+import 'package:complaints/features/users/presentation/bloc/user_bloc.dart' as user_bloc;
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:excel/excel.dart' hide Border;
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
@@ -10,36 +13,124 @@ import '../../data/repositories/user_repository.dart';
 import '../widgets/users_card_widget.dart';
 import '../widgets/search_filter_widget.dart';
 
-class UsersContent extends StatefulWidget {
+class UsersContent extends StatelessWidget {
   const UsersContent({super.key});
 
   @override
-  State<UsersContent> createState() => _UsersContentState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => UserBloc(UserRepository()),
+      child: const UsersView(),
+    );
+  }
 }
 
-class _UsersContentState extends State<UsersContent> {
-  final UserRepository _repository = UserRepository();
+class UsersView extends StatefulWidget {
+  const UsersView({super.key});
+
+  @override
+  State<UsersView> createState() => _UsersViewState();
+}
+
+class _UsersViewState extends State<UsersView> {
+  @override
+  void initState() {
+    super.initState();
+    // Fetch users when the widget is first created
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<user_bloc.UserBloc>().add(user_bloc.FetchUsers());
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<user_bloc.UserBloc, user_bloc.UserState>(
+      builder: (context, state) {
+        if (state is user_bloc.UserLoading) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (state is user_bloc.UserError) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                const SizedBox(height: 16),
+                Text('خطأ: ${state.message}'),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    context.read<user_bloc.UserBloc>().add(user_bloc.FetchUsers());
+                  },
+                  child: const Text('إعادة المحاولة'),
+                ),
+              ],
+            ),
+          );
+        } else if (state is user_bloc.UserLoaded) {
+          return UsersListContent(users: state.users);
+        } else {
+          return const Center(child: Text('لا توجد بيانات'));
+        }
+      },
+    );
+  }
+}
+
+class UsersListContent extends StatefulWidget {
+  final List<User> users;
+
+  const UsersListContent({super.key, required this.users});
+
+  @override
+  State<UsersListContent> createState() => _UsersListContentState();
+}
+
+class _UsersListContentState extends State<UsersListContent> {
   late List<User> _filteredUsers;
   String _searchQuery = '';
   bool _filterEmployee = true;
   bool _filterCitizen = true;
+  static const int _pageSize = 4;
+  int _currentPage = 1;
 
   @override
   void initState() {
     super.initState();
-    _filteredUsers = _repository.getUsers();
+    _filteredUsers = widget.users;
+  }
+
+  int get _totalPages {
+    if (_filteredUsers.isEmpty) return 1;
+    return (_filteredUsers.length / _pageSize).ceil();
+  }
+
+  List<User> get _pagedUsers {
+    final totalPages = _totalPages;
+    final safePage = _currentPage.clamp(1, totalPages);
+    final start = (safePage - 1) * _pageSize;
+    if (start >= _filteredUsers.length) return const [];
+    final end = (start + _pageSize).clamp(0, _filteredUsers.length);
+    return _filteredUsers.sublist(start, end);
+  }
+
+  void _onPageChanged(int page) {
+    setState(() {
+      _currentPage = page;
+    });
   }
 
   void _updateFilters() {
     setState(() {
-      _filteredUsers = _repository.getUsers().where((user) {
-        bool matchesSearch = user.name.contains(_searchQuery) ||
+      _filteredUsers = widget.users.where((user) {
+        bool matchesSearch = user.fullName.contains(_searchQuery) ||
             user.email.contains(_searchQuery) ||
-            user.region.contains(_searchQuery);
+            (user.governmentEntity?.contains(_searchQuery) ?? false);
         bool matchesType = (_filterEmployee && user.type == UserType.employee) ||
             (_filterCitizen && user.type == UserType.citizen);
         return matchesSearch && matchesType;
       }).toList();
+
+      _currentPage = 1;
     });
   }
 
@@ -78,6 +169,23 @@ class _UsersContentState extends State<UsersContent> {
             builder: (context, setState) => Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton(
+                    onPressed: () {
+                      setState(() {
+                        _filterEmployee = true;
+                        _filterCitizen = true;
+                      });
+                      _updateFilters();
+                    },
+                    style: TextButton.styleFrom(
+                      foregroundColor: const Color(0xFF3E68FF),
+                      textStyle: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    child: const Text('إعادة تعيين'),
+                  ),
+                ),
                 Container(
                   margin: const EdgeInsets.symmetric(vertical: 4),
                   decoration: BoxDecoration(
@@ -250,16 +358,16 @@ class _UsersContentState extends State<UsersContent> {
       TextCellValue('البريد الإلكتروني'),
       TextCellValue('رقم الهاتف'),
       TextCellValue('النوع'),
-      TextCellValue('المنطقة'),
+      TextCellValue('الجهة الحكومية'),
     ]);
 
     for (var user in users) {
       sheet.appendRow([
-        TextCellValue(user.name),
+        TextCellValue(user.fullName),
         TextCellValue(user.email),
-        TextCellValue(user.phone),
+        TextCellValue(user.phone.toString()),
         TextCellValue(user.type.label),
-        TextCellValue(user.region),
+        TextCellValue(user.governmentEntity ?? 'غير محدد'),
       ]);
     }
 
@@ -312,7 +420,7 @@ class _UsersContentState extends State<UsersContent> {
                       pw.Padding(
                           padding: const pw.EdgeInsets.all(8),
                           child:
-                              pw.Text(user.name, style: pw.TextStyle(font: arabicFont))),
+                              pw.Text(user.fullName, style: pw.TextStyle(font: arabicFont))),
                       pw.Padding(
                           padding: const pw.EdgeInsets.all(8),
                           child:
@@ -320,7 +428,7 @@ class _UsersContentState extends State<UsersContent> {
                       pw.Padding(
                           padding: const pw.EdgeInsets.all(8),
                           child:
-                              pw.Text(user.phone, style: pw.TextStyle(font: arabicFont))),
+                              pw.Text(user.phone.toString(), style: pw.TextStyle(font: arabicFont))),
                       pw.Padding(
                           padding: const pw.EdgeInsets.all(8),
                           child:
@@ -328,7 +436,7 @@ class _UsersContentState extends State<UsersContent> {
                       pw.Padding(
                           padding: const pw.EdgeInsets.all(8),
                           child:
-                              pw.Text(user.region, style: pw.TextStyle(font: arabicFont))),
+                              pw.Text(user.governmentEntity ?? 'غير محدد', style: pw.TextStyle(font: arabicFont))),
                     ],
                   );
                 }),
@@ -361,7 +469,16 @@ class _UsersContentState extends State<UsersContent> {
           child: Column(
             children: [
              
-              Expanded(child: UsersCardWidget(users: _filteredUsers,onExportTap: _onExportTap,)),
+              Expanded(
+                child: UsersCardWidget(
+                  users: _pagedUsers,
+                  onExportTap: _onExportTap,
+                  totalItems: _filteredUsers.length,
+                  pageSize: _pageSize,
+                  currentPage: _currentPage,
+                  onPageChanged: _onPageChanged,
+                ),
+              ),
             ],
           ),
         ),

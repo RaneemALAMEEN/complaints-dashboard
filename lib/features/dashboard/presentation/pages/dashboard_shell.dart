@@ -6,9 +6,7 @@ import 'package:complaints/features/dashboard/presentation/widgets/dashboard_app
 import 'package:complaints/features/users/presentation/pages/users_content.dart';
 import 'package:complaints/features/complaints/presentation/pages/all_complaints_page.dart';
 import 'package:complaints/features/dashboard/presentation/pages/dashboard_page.dart';
-import 'package:complaints/shared/pages/notifications_page.dart';
 import 'package:complaints/shared/pages/profile_page.dart';
-import 'package:complaints/shared/pages/reports_page.dart';
 import 'package:complaints/shared/widgets/permissions_sidebar_widget.dart';
 import 'package:complaints/core/models/permission.dart';
 import 'package:complaints/core/services/permissions_service.dart';
@@ -36,19 +34,9 @@ class _DashboardShellState extends State<DashboardShell> {
       builder: () => const DashboardOverviewContent(),
     ),
     'complaints': _SectionConfig(
-      title: 'لوحة تحكم الأدمن',
+      title: 'لوحة التحكم',
       subtitle: 'أهلاً بك، تابع آخر تحديثات الشكاوى',
       builder: () => const ComplaintsContent(),
-    ),
-    'reports': _SectionConfig(
-      title: 'التقارير والإحصائيات',
-      subtitle: 'تتبع أداء الشكاوى والأقسام المختلفة',
-      builder: () => const ReportsContent(),
-    ),
-    'notifications': _SectionConfig(
-      title: 'الإشعارات',
-      subtitle: 'جميع التنبيهات الحديثة ستظهر هنا',
-      builder: () => const NotificationsContent(),
     ),
     'profile': _SectionConfig(
       title: 'الملف الشخصي',
@@ -76,6 +64,16 @@ class _DashboardShellState extends State<DashboardShell> {
 
   void _handleSelection(String key) async {
     final currentUser = await PermissionsService.getCurrentUser();
+
+    if (key != 'logout' && !_sections.containsKey(key)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('هذه الصفحة غير متاحة حالياً'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
     
     // Check if user has permission to access this section
     if (!_canAccessSection(key, currentUser)) {
@@ -113,9 +111,6 @@ class _DashboardShellState extends State<DashboardShell> {
         return PermissionsService.canViewDashboard(user);
       case 'complaints':
         return PermissionsService.canViewComplaints(user);
-      case 'reports':
-      case 'notifications':
-        return user?.isAdmin == true;
       case 'profile':
         return user != null;
       case 'registerEmployee':

@@ -52,11 +52,18 @@ class ComplaintLoading extends ComplaintState {}
 class ComplaintsLoaded extends ComplaintState {
   final List<Complaint> complaints;
   final Pagination pagination;
+  final String? toastMessage;
+  final bool isError;
 
-  const ComplaintsLoaded(this.complaints, this.pagination);
+  const ComplaintsLoaded(
+    this.complaints,
+    this.pagination, {
+    this.toastMessage,
+    this.isError = false,
+  });
 
   @override
-  List<Object> get props => [complaints, pagination];
+  List<Object> get props => [complaints, pagination, toastMessage ?? '', isError];
 }
 
 class ComplaintStatsLoaded extends ComplaintState {

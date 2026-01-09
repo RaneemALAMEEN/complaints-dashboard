@@ -24,7 +24,27 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       } catch (e, stackTrace) {
         print('Login Error: $e');
         print('StackTrace: $stackTrace');
-        emit(AuthFailure('فشل تسجيل الدخول: ${e.toString()}'));
+        
+        // Extract meaningful error message
+        String errorMessage = 'فشل تسجيل الدخول';
+        
+        if (e.toString().toLowerCase().contains('invalid') || 
+            e.toString().toLowerCase().contains('wrong') ||
+            e.toString().toLowerCase().contains('incorrect')) {
+          errorMessage = 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
+        } else if (e.toString().toLowerCase().contains('network') ||
+                   e.toString().toLowerCase().contains('connection')) {
+          errorMessage = 'مشكلة في الاتصال بالإنترنت';
+        } else if (e.toString().toLowerCase().contains('not found') ||
+                   e.toString().toLowerCase().contains('user')) {
+          errorMessage = 'المستخدم غير موجود';
+        } else if (e.toString().toLowerCase().contains('password')) {
+          errorMessage = 'كلمة المرور غير صحيحة';
+        } else if (e.toString().toLowerCase().contains('email')) {
+          errorMessage = 'البريد الإلكتروني غير صحيح';
+        }
+        
+        emit(AuthFailure(errorMessage));
       }
     });
   }

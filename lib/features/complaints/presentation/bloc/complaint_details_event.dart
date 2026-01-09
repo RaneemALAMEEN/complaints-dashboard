@@ -5,3 +5,15 @@ class FetchComplaintDetails extends ComplaintDetailsEvent {
 
   FetchComplaintDetails(this.complaintId);
 }
+
+class UpdateComplaintDetailsStatus extends ComplaintDetailsEvent {
+  final int complaintId;
+  final String status;
+  final String? notes;
+
+  UpdateComplaintDetailsStatus(
+    this.complaintId,
+    this.status, {
+    this.notes,
+  });
+}

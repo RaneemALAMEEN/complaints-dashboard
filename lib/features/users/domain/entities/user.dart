@@ -10,19 +10,22 @@ extension UserTypeExtension on UserType {
 }
 
 class User {
-  final String id;
-  final String name;
+  final int id;
+  final String firstName;
+  final String lastName;
   final String email;
-  final String phone;
+  final int phone;
   final UserType type;
-  final String region;
+  final String? governmentEntity;
 
   User({
     required this.id,
-    required this.name,
+    required this.firstName,
+    required this.lastName,
     required this.email,
     required this.phone,
     required this.type,
-    required this.region,
+    this.governmentEntity,
   });
+  String get fullName => '$firstName $lastName';
 }

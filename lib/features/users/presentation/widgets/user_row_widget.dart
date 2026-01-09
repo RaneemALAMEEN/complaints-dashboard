@@ -24,9 +24,9 @@ class UserRowWidget extends StatelessWidget {
         ),
         child: Row(
           children: [
-            _BodyCell(text: user.name, flex: 2),
+            _BodyCell(text: user.fullName, flex: 2),
             _BodyCell(text: user.email, flex: 3),
-            _BodyCell(text: user.phone, flex: 2),
+            _BodyCell(text: user.phone.toString(), flex: 2),
             Expanded(
               flex: 1,
               child: Align(
@@ -57,7 +57,7 @@ class UserRowWidget extends StatelessWidget {
                 ),
               ),
             ),
-            _BodyCell(text: user.region, flex: 2),
+            _BodyCell(text: user.governmentEntity ?? 'غير محدد', flex: 2),
           ],
         ),
       ),

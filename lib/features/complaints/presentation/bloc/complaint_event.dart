@@ -16,6 +16,16 @@ class FetchAllComplaints extends ComplaintEvent {
   List<Object> get props => [page];
 }
 
+class DeleteComplaint extends ComplaintEvent {
+  final int complaintId;
+  final int page;
+
+  const DeleteComplaint(this.complaintId, {required this.page});
+
+  @override
+  List<Object> get props => [complaintId, page];
+}
+
 class FetchComplaintStats extends ComplaintEvent {
   const FetchComplaintStats();
 }

@@ -8,9 +8,12 @@ import 'complaint_state.dart';
 
 class ComplaintBloc extends Bloc<ComplaintEvent, ComplaintState> {
   final Dio _dio = Dio();
+  String? _pendingToastMessage;
+  bool _pendingToastIsError = false;
 
   ComplaintBloc() : super(ComplaintInitial()) {
     on<FetchAllComplaints>(_onFetchAllComplaints);
+    on<DeleteComplaint>(_onDeleteComplaint);
     on<FetchComplaintStats>(_onFetchComplaintStats);
     on<FetchDashboardData>(_onFetchDashboardData);
     on<UpdateComplaintStatus>(_onUpdateComplaintStatus);
@@ -46,7 +49,7 @@ class ComplaintBloc extends Bloc<ComplaintEvent, ComplaintState> {
       final endpoint = await _getComplaintsEndpoint();
       print('Using endpoint: $endpoint');
       final response = await _dio.get(
-        'http://localhost$endpoint',
+        'http://localhost:4002$endpoint',
         queryParameters: {'page': event.page},
         options: Options(
           headers: {
@@ -64,7 +67,17 @@ class ComplaintBloc extends Bloc<ComplaintEvent, ComplaintState> {
             .map((json) => Complaint.fromJson(json))
             .toList();
         final pagination = Pagination.fromJson(complaintsData['pagination']);
-        emit(ComplaintsLoaded(complaints, pagination));
+        final toast = _pendingToastMessage;
+        final toastIsError = _pendingToastIsError;
+        _pendingToastMessage = null;
+        _pendingToastIsError = false;
+
+        emit(ComplaintsLoaded(
+          complaints,
+          pagination,
+          toastMessage: toast,
+          isError: toastIsError,
+        ));
       print('=== ComplaintsLoaded state emitted with ${complaints.length} complaints ===');
       } else {
         print('خطأ في جلب الشكاوى: Status ${response.statusCode}');
@@ -73,6 +86,66 @@ class ComplaintBloc extends Bloc<ComplaintEvent, ComplaintState> {
     } catch (e) {
       print('خطأ في جلب الشكاوى: $e');
       emit(ComplaintFailure(e.toString()));
+    }
+  }
+
+  Future<void> _onDeleteComplaint(
+    DeleteComplaint event,
+    Emitter<ComplaintState> emit,
+  ) async {
+    try {
+      final token = await _getToken();
+      if (token == null) {
+        _pendingToastMessage = 'لا يمكن الحذف: التوكن غير موجود';
+        _pendingToastIsError = true;
+        add(FetchAllComplaints(event.page));
+        return;
+      }
+
+      final url = 'http://localhost:4002/api/complaint/admin/${event.complaintId}';
+      print('=== DELETE COMPLAINT ===');
+      print('Request: DELETE $url');
+
+      final response = await _dio.delete(
+        url,
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'accept': 'application/json',
+          },
+        ),
+      );
+
+      print('Status Code: ${response.statusCode}');
+      print('Response Data: ${response.data}');
+      print('========================');
+
+      final success = response.statusCode == 200 && (response.data?['success'] == true);
+      if (success) {
+        _pendingToastMessage = 'تم حذف الشكوى بنجاح';
+        _pendingToastIsError = false;
+        add(FetchAllComplaints(event.page));
+      } else {
+        _pendingToastMessage = 'فشل حذف الشكوى';
+        _pendingToastIsError = true;
+        add(FetchAllComplaints(event.page));
+      }
+    } on DioException catch (e) {
+      print('=== DELETE COMPLAINT ERROR (DioException) ===');
+      print('Status Code: ${e.response?.statusCode}');
+      print('Response Data: ${e.response?.data}');
+      print('Message: ${e.message}');
+      print('============================================');
+
+      _pendingToastMessage = e.response?.statusCode == 404
+          ? 'الشكوى غير موجودة'
+          : 'حدث خطأ أثناء حذف الشكوى';
+      _pendingToastIsError = true;
+      add(FetchAllComplaints(event.page));
+    } catch (e) {
+      _pendingToastMessage = 'حدث خطأ أثناء حذف الشكوى';
+      _pendingToastIsError = true;
+      add(FetchAllComplaints(event.page));
     }
   }
 
@@ -97,7 +170,7 @@ class ComplaintBloc extends Bloc<ComplaintEvent, ComplaintState> {
 
       while (hasMore) {
         final response = await _dio.get(
-          'http://localhost$endpoint',
+          'http://localhost:4002$endpoint',
           queryParameters: {'page': page},
           options: Options(
             headers: {
@@ -181,7 +254,7 @@ class ComplaintBloc extends Bloc<ComplaintEvent, ComplaintState> {
       // Fetch first page complaints for display
       final endpoint = await _getComplaintsEndpoint();
       final complaintsResponse = await _dio.get(
-        'http://localhost$endpoint',
+        'http://localhost:4002$endpoint',
         queryParameters: {'page': 1},
         options: Options(
           headers: {
@@ -212,7 +285,7 @@ class ComplaintBloc extends Bloc<ComplaintEvent, ComplaintState> {
 
       while (hasMore) {
         final response = await _dio.get(
-          'http://localhost$endpoint',
+          'http://localhost:4002$endpoint',
           queryParameters: {'page': page},
           options: Options(
             headers: {
@@ -300,7 +373,7 @@ class ComplaintBloc extends Bloc<ComplaintEvent, ComplaintState> {
       
       if (isEmployee) {
         // Employee endpoint with notes
-        endpoint = 'http://localhost/api/complaint/updateComplaintByEmployee/${event.complaintId}';
+        endpoint = 'http://localhost:4002/api/complaint/updateComplaintByEmployee/${event.complaintId}';
         requestData = {
           'notes': event.notes ?? '',
           'status': event.status,
@@ -308,7 +381,7 @@ class ComplaintBloc extends Bloc<ComplaintEvent, ComplaintState> {
         print('Employee: Updating complaint ${event.complaintId} with status: ${event.status}');
       } else {
         // Admin endpoint (existing)
-        endpoint = 'http://localhost/api/complaint/${event.complaintId}/status';
+        endpoint = 'http://localhost:4002/api/complaint/${event.complaintId}/status';
         requestData = {'status': event.status};
         print('Admin: Updating complaint ${event.complaintId} with status: ${event.status}');
       }

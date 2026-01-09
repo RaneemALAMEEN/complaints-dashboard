@@ -2,6 +2,8 @@ import 'package:complaints/features/complaints/domain/entities/complaint.dart';
 import 'package:complaints/features/complaints/presentation/bloc/complaint_details_bloc.dart';
 import 'package:complaints/features/complaints/presentation/bloc/complaint_details_event.dart';
 import 'package:complaints/features/complaints/presentation/bloc/complaint_details_state.dart';
+import 'package:complaints/core/services/permissions_service.dart';
+import 'package:complaints/core/models/permission.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -29,17 +31,20 @@ class ComplaintDetailsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryText = isDark ? Colors.white : const Color(0xFF1E293B);
+    final bodyText = isDark ? const Color(0xFFE2E8F0) : const Color(0xFF64748B);
+
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: const Color(0xFFF3F6FD),
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
           title: const Text('تفاصيل الشكوى'),
-          backgroundColor: Colors.white,
-          elevation: 0,
-          iconTheme: const IconThemeData(color: Colors.black),
-          titleTextStyle: const TextStyle(
-            color: Colors.black,
+          backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+          elevation: Theme.of(context).appBarTheme.elevation ?? 0,
+          iconTheme: Theme.of(context).appBarTheme.iconTheme,
+          titleTextStyle: Theme.of(context).appBarTheme.titleTextStyle?.copyWith(
             fontSize: 18,
             fontWeight: FontWeight.bold,
           ),
@@ -56,7 +61,16 @@ class ComplaintDetailsView extends StatelessWidget {
                   children: [
                     const Icon(Icons.error_outline, size: 64, color: Colors.red),
                     const SizedBox(height: 16),
-                    Text('خطأ: ${state.message}'),
+                    Text(
+                      'خطأ: ${state.message}',
+                      style: TextStyle(color: primaryText),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'يرجى المحاولة مرة أخرى',
+                      style: TextStyle(color: bodyText),
+                    ),
                     const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: () {
@@ -86,6 +100,13 @@ class _ComplaintDetailsContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = Theme.of(context).cardTheme.color ?? Theme.of(context).cardColor;
+    final primaryText = isDark ? Colors.white : const Color(0xFF1E293B);
+    final bodyText = isDark ? const Color(0xFFE2E8F0) : const Color(0xFF64748B);
+    final borderColor = isDark ? const Color(0xFF475569) : const Color(0xFFE2E8F0);
+    final surfaceAlt = isDark ? const Color(0xFF334155) : const Color(0xFFF8FAFC);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -96,11 +117,11 @@ class _ComplaintDetailsContent extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: cardColor,
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withOpacity(Theme.of(context).brightness == Brightness.dark ? 0.3 : 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -114,13 +135,16 @@ class _ComplaintDetailsContent extends StatelessWidget {
                   children: [
                     Text(
                       'رقم الشكوى: ${complaint.referenceNumber}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF1E293B),
+                        color: primaryText,
                       ),
                     ),
-                    _StatusBadge(status: complaint.status),
+                    _StatusBadgeSelector(
+                      complaintId: complaint.id,
+                      status: complaint.status,
+                    ),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -151,11 +175,11 @@ class _ComplaintDetailsContent extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: cardColor,
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withOpacity(Theme.of(context).brightness == Brightness.dark ? 0.3 : 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -164,12 +188,12 @@ class _ComplaintDetailsContent extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'الموقع والعنوان',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF1E293B),
+                    color: primaryText,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -193,11 +217,11 @@ class _ComplaintDetailsContent extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: cardColor,
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withOpacity(Theme.of(context).brightness == Brightness.dark ? 0.3 : 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -206,21 +230,21 @@ class _ComplaintDetailsContent extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'وصف المشكلة',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF1E293B),
+                    color: primaryText,
                   ),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   complaint.description,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     height: 1.6,
-                    color: Color(0xFF64748B),
+                    color: bodyText,
                   ),
                 ),
               ],
@@ -234,11 +258,11 @@ class _ComplaintDetailsContent extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: cardColor,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withOpacity(Theme.of(context).brightness == Brightness.dark ? 0.3 : 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -247,12 +271,12 @@ class _ComplaintDetailsContent extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'الصور المرفقة',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF1E293B),
+                      color: primaryText,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -268,31 +292,27 @@ class _ComplaintDetailsContent extends StatelessWidget {
                     itemCount: complaint.images!.length,
                     itemBuilder: (context, index) {
                       final imageUrl = complaint.images![index];
-                      // Remove 'public/' from the beginning if it exists
-                      final cleanImageUrl = imageUrl.startsWith('public/') 
-                          ? imageUrl.substring(7) // Remove 'public/' (7 characters)
-                          : imageUrl;
-                      
+                      // Use the image URL directly as it comes from the backend
                       return GestureDetector(
-                        onTap: () => _showImageDialog(context, cleanImageUrl, index),
+                        onTap: () => _showImageDialog(context, imageUrl, index),
                         child: Container(
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                            border: Border.all(color: borderColor),
                           ),
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(12),
                             child: CachedNetworkImage(
-                              imageUrl: 'http://localhost/$cleanImageUrl',
+                              imageUrl: 'http://localhost/$imageUrl',
                               fit: BoxFit.cover,
                               placeholder: (context, url) => const Center(
                                 child: CircularProgressIndicator(),
                               ),
                               errorWidget: (context, url, error) => Container(
-                                color: const Color(0xFFF1F5F9),
-                                child: const Icon(
+                                color: surfaceAlt,
+                                child: Icon(
                                   Icons.image_not_supported,
-                                  color: Color(0xFF94A3B8),
+                                  color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF94A3B8),
                                   size: 32,
                                 ),
                               ),
@@ -314,11 +334,11 @@ class _ComplaintDetailsContent extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: cardColor,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withOpacity(Theme.of(context).brightness == Brightness.dark ? 0.3 : 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -327,47 +347,43 @@ class _ComplaintDetailsContent extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'المرفقات',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF1E293B),
+                      color: primaryText,
                     ),
                   ),
                   const SizedBox(height: 16),
                   ...complaint.attachments!.map((attachment) {
-                    // Remove 'public/' from the beginning if it exists
-                    final cleanAttachment = attachment.startsWith('public/') 
-                        ? attachment.substring(7) // Remove 'public/' (7 characters)
-                        : attachment;
-                    
+                    // Use attachment URL directly as it comes from the backend
                     return Container(
                       margin: const EdgeInsets.only(bottom: 8),
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF8FAFC),
+                        color: surfaceAlt,
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                        border: Border.all(color: borderColor),
                       ),
                       child: Row(
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.attach_file,
-                            color: Color(0xFF64748B),
+                            color: bodyText,
                           ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              cleanAttachment.split('/').last,
-                              style: const TextStyle(
-                                color: Color(0xFF1E293B),
+                              attachment.split('/').last,
+                              style: TextStyle(
+                                color: primaryText,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
                           ),
                           IconButton(
-                            onPressed: () => _openAttachment('http://localhost/$cleanAttachment'),
+                            onPressed: () => _openAttachment('http://localhost/$attachment'),
                             icon: const Icon(
                               Icons.download,
                               color: Color(0xFF3B82F6),
@@ -390,6 +406,10 @@ class _ComplaintDetailsContent extends StatelessWidget {
   }
 
   void _showImageDialog(BuildContext context, String imageUrl, int index) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final surfaceAlt = isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9);
+    final iconColor = isDark ? const Color(0xFFCBD5E1) : const Color(0xFF94A3B8);
+
     showDialog(
       context: context,
       builder: (context) => Dialog(
@@ -406,10 +426,10 @@ class _ComplaintDetailsContent extends StatelessWidget {
                     child: CircularProgressIndicator(),
                   ),
                   errorWidget: (context, url, error) => Container(
-                    color: const Color(0xFFF1F5F9),
-                    child: const Icon(
+                    color: surfaceAlt,
+                    child: Icon(
                       Icons.image_not_supported,
-                      color: Color(0xFF94A3B8),
+                      color: iconColor,
                       size: 64,
                     ),
                   ),
@@ -461,6 +481,10 @@ class _DetailRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final labelColor = isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569);
+    final valueColor = isDark ? Colors.white : const Color(0xFF1E293B);
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -468,21 +492,194 @@ class _DetailRow extends StatelessWidget {
           width: 120,
           child: Text(
             '$label:',
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.w600,
-              color: Color(0xFF475569),
+              color: labelColor,
             ),
           ),
         ),
         Expanded(
           child: Text(
             value,
-            style: const TextStyle(
-              color: Color(0xFF1E293B),
-            ),
+            style: TextStyle(color: valueColor),
           ),
         ),
       ],
+    );
+  }
+}
+
+class _StatusBadgeSelector extends StatelessWidget {
+  final int complaintId;
+  final ComplaintStatus status;
+
+  const _StatusBadgeSelector({
+    required this.complaintId,
+    required this.status,
+  });
+
+  Future<String?> _askForNotes(BuildContext context) async {
+    final controller = TextEditingController();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return showDialog<String>(
+      context: context,
+      builder: (context) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: AlertDialog(
+          backgroundColor: Theme.of(context).cardTheme.color,
+          surfaceTintColor: Theme.of(context).cardTheme.color,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(
+              color: isDark ? const Color(0xFF475569) : const Color(0xFFE8ECFF),
+              width: 1,
+            ),
+          ),
+          title: Text(
+            'معلومات إضافية مطلوبة',
+            style: TextStyle(
+              color: isDark ? Colors.white : const Color(0xFF1E293B),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          content: TextField(
+            controller: controller,
+            maxLines: 4,
+            decoration: InputDecoration(
+              hintText: 'اكتب المعلومات الإضافية المطلوبة من مقدم الشكوى...',
+              filled: true,
+              fillColor: isDark ? const Color(0xFF334155) : const Color(0xFFF8FAFC),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: isDark ? const Color(0xFF475569) : const Color(0xFFE2E8F0),
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: isDark ? const Color(0xFF475569) : const Color(0xFFE2E8F0),
+                ),
+              ),
+            ),
+            style: TextStyle(color: isDark ? Colors.white : const Color(0xFF0F172A)),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              style: TextButton.styleFrom(foregroundColor: const Color(0xFF3E68FF)),
+              child: const Text('إلغاء'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, controller.text.trim()),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF3E68FF),
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('إرسال'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _onSelected(BuildContext context, ComplaintStatus selected) async {
+    if (selected == ComplaintStatus.waitingInfo) {
+      final notes = (await _askForNotes(context))?.trim() ?? '';
+      if (!context.mounted) return;
+
+      if (notes.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('الرجاء إدخال المعلومات الإضافية أولاً'),
+            backgroundColor: Colors.red.shade600,
+          ),
+        );
+        return;
+      }
+
+      context.read<ComplaintDetailsBloc>().add(
+            UpdateComplaintDetailsStatus(
+              complaintId,
+              selected.label,
+              notes: notes,
+            ),
+          );
+      return;
+    }
+
+    context.read<ComplaintDetailsBloc>().add(
+          UpdateComplaintDetailsStatus(
+            complaintId,
+            selected.label,
+            notes: '',
+          ),
+        );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<User?>(
+      future: PermissionsService.getCurrentUser(),
+      builder: (context, snapshot) {
+        final user = snapshot.data;
+        final canUpdate = user != null && (PermissionsService.canUpdateComplaint(user) || user.isAdmin);
+
+        if (!canUpdate) {
+          return _StatusBadge(status: status);
+        }
+
+        final style = status.style;
+        return PopupMenuButton<ComplaintStatus>(
+          tooltip: 'تغيير حالة الشكوى',
+          position: PopupMenuPosition.over,
+          onSelected: (s) => _onSelected(context, s),
+          itemBuilder: (context) => ComplaintStatus.values
+              .map(
+                (s) => PopupMenuItem(
+                  value: s,
+                  child: Row(
+                    children: [
+                      Icon(s.style.icon, color: s.style.color, size: 18),
+                      const SizedBox(width: 8),
+                      Text(s.style.label),
+                    ],
+                  ),
+                ),
+              )
+              .toList(),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: style.background,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: style.color.withOpacity(0.2)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(style.icon, size: 16, color: style.color),
+                const SizedBox(width: 6),
+                Text(
+                  style.label,
+                  style: TextStyle(
+                    color: style.color,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Icon(
+                  Icons.keyboard_arrow_down,
+                  size: 18,
+                  color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : Colors.black45,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

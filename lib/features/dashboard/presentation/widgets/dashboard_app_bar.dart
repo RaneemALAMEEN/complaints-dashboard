@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:complaints/core/theme/theme_provider.dart';
+import 'package:complaints/core/services/permissions_service.dart';
+import 'package:complaints/core/models/permission.dart';
 
 class DashboardAppBar extends StatelessWidget {
   final String title;
@@ -55,14 +57,6 @@ class DashboardAppBar extends StatelessWidget {
                 );
               },
             ),
-            IconButton(
-              icon: const Icon(Icons.settings_outlined),
-              onPressed: () {},
-            ),
-            IconButton(
-              icon: const Icon(Icons.notifications_none),
-              onPressed: () {},
-            ),
             const SizedBox(width: 12),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -73,16 +67,26 @@ class DashboardAppBar extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Row(
-                children: const [
-                  CircleAvatar(
+                children: [
+                  const CircleAvatar(
                     radius: 20,
                     backgroundColor: Color(0xFF3E68FF),
                     child: Icon(Icons.person, color: Colors.white),
                   ),
-                  SizedBox(width: 8),
-                  Text(
-                    'رنيم الأمين',
-                    style: TextStyle(fontWeight: FontWeight.w600),
+                  const SizedBox(width: 8),
+                  FutureBuilder<User?>(
+                    future: PermissionsService.getCurrentUser(),
+                    builder: (context, snapshot) {
+                      final user = snapshot.data;
+                      final name = user == null
+                          ? 'مستخدم'
+                          : '${user.firstName} ${user.lastName}'.trim();
+
+                      return Text(
+                        name.isEmpty ? 'مستخدم' : name,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      );
+                    },
                   ),
                 ],
               ),
