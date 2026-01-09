@@ -104,31 +104,70 @@ class _RegisterEmployeePageState extends State<RegisterEmployeePage> {
           );
     }
   }
+Future<void> _showPermissionPicker() async {
+  final selected = Set<int>.from(permissionList);
+  final employeePermissions =
+      _availablePermissions.where((p) => p['group'] == 'موظف').toList();
+  final adminPermissions =
+      _availablePermissions.where((p) => p['group'] == 'أدمن').toList();
 
-  Future<void> _showPermissionPicker() async {
-    final selected = Set<int>.from(permissionList);
-    final employeePermissions = _availablePermissions.where((p) => p['group'] == 'موظف').toList();
-    final adminPermissions = _availablePermissions.where((p) => p['group'] == 'أدمن').toList();
-    await showDialog<void>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('اختر الصلاحيات'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('صلاحيات موظف', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                const SizedBox(height: 8),
-                ...employeePermissions.map((p) {
-                  final id = p['id'] as int;
-                  final label = p['label'] as String;
-                  return StatefulBuilder(
-                    builder: (context, setStateDialog) {
-                      return CheckboxListTile(
+  final isDark = Theme.of(context).brightness == Brightness.dark;
+
+  await showDialog<void>(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        backgroundColor:
+            isDark ? const Color(0xFF1E293B) : Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: Text(
+          'اختر الصلاحيات',
+          style: TextStyle(
+            color: isDark ? Colors.white : const Color(0xFF111D42),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'صلاحيات موظف',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color:
+                      isDark ? const Color(0xFFCBD5E1) : const Color(0xFF1E3A8A),
+                ),
+              ),
+              const SizedBox(height: 8),
+              ...employeePermissions.map((p) {
+                final id = p['id'] as int;
+                final label = p['label'] as String;
+                return StatefulBuilder(
+                  builder: (context, setStateDialog) {
+                    return Theme(
+                      data: Theme.of(context).copyWith(
+                        checkboxTheme: CheckboxThemeData(
+                          fillColor: MaterialStateProperty.all(
+                            isDark
+                                ? Theme.of(context).colorScheme.primary
+                                : const Color(0xFF1E3A8A),
+                          ),
+                        ),
+                      ),
+                      child: CheckboxListTile(
                         value: selected.contains(id),
-                        title: Text(label),
+                        title: Text(
+                          label,
+                          style: TextStyle(
+                            color:
+                                isDark ? const Color(0xFFE2E8F0) : const Color(0xFF111D42),
+                          ),
+                        ),
                         onChanged: (v) {
                           setStateDialog(() {
                             if (v == true) {
@@ -138,21 +177,46 @@ class _RegisterEmployeePageState extends State<RegisterEmployeePage> {
                             }
                           });
                         },
-                      );
-                    },
-                  );
-                }),
-                const SizedBox(height: 16),
-                const Text('صلاحيات أدمن', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                const SizedBox(height: 8),
-                ...adminPermissions.map((p) {
-                  final id = p['id'] as int;
-                  final label = p['label'] as String;
-                  return StatefulBuilder(
-                    builder: (context, setStateDialog) {
-                      return CheckboxListTile(
+                      ),
+                    );
+                  },
+                );
+              }),
+              const SizedBox(height: 16),
+              Text(
+                'صلاحيات أدمن',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color:
+                      isDark ? const Color(0xFFCBD5E1) : const Color(0xFF1E3A8A),
+                ),
+              ),
+              const SizedBox(height: 8),
+              ...adminPermissions.map((p) {
+                final id = p['id'] as int;
+                final label = p['label'] as String;
+                return StatefulBuilder(
+                  builder: (context, setStateDialog) {
+                    return Theme(
+                      data: Theme.of(context).copyWith(
+                        checkboxTheme: CheckboxThemeData(
+                          fillColor: MaterialStateProperty.all(
+                            isDark
+                                ? Theme.of(context).colorScheme.primary
+                                : const Color(0xFF1E3A8A),
+                          ),
+                        ),
+                      ),
+                      child: CheckboxListTile(
                         value: selected.contains(id),
-                        title: Text(label),
+                        title: Text(
+                          label,
+                          style: TextStyle(
+                            color:
+                                isDark ? const Color(0xFFE2E8F0) : const Color(0xFF111D42),
+                          ),
+                        ),
                         onChanged: (v) {
                           setStateDialog(() {
                             if (v == true) {
@@ -162,33 +226,50 @@ class _RegisterEmployeePageState extends State<RegisterEmployeePage> {
                             }
                           });
                         },
-                      );
-                    },
-                  );
-                }),
-              ],
+                      ),
+                    );
+                  },
+                );
+              }),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(
+              'إلغاء',
+              style: TextStyle(
+                color:
+                    isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+              ),
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('إلغاء'),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor:
+                  isDark ? Color(0xFF1E3A8A) : const Color(0xFF1E3A8A),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  permissionList = selected.toList()..sort();
-                  _permissionsController.text = _getPermissionLabels(permissionList);
-                });
-                Navigator.of(context).pop();
-              },
-              child: const Text('تأكيد'),
-            ),
-          ],
-        );
-      },
-    );
-  }
+            onPressed: () {
+              setState(() {
+                permissionList = selected.toList()..sort();
+                _permissionsController.text =
+                    _getPermissionLabels(permissionList);
+              });
+              Navigator.of(context).pop();
+            },
+            child: const Text('تأكيد'),
+          ),
+        ],
+      );
+    },
+  );
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -312,7 +393,7 @@ class _RegisterEmployeePageState extends State<RegisterEmployeePage> {
                                           borderRadius: BorderRadius.circular(12),
                                           borderSide: BorderSide(
                                             color: Theme.of(context).brightness == Brightness.dark 
-                                                ? Colors.deepPurple
+                                                ? Color(0xFF1E3A8A)
                                                 : const Color(0xFFADB9D8),
                                             width: 2,
                                           ),
@@ -362,7 +443,7 @@ class _RegisterEmployeePageState extends State<RegisterEmployeePage> {
                                           borderRadius: BorderRadius.circular(12),
                                           borderSide: BorderSide(
                                             color: Theme.of(context).brightness == Brightness.dark 
-                                                ? Colors.deepPurple
+                                                ? Color(0xFF1E3A8A)
                                                 : const Color(0xFFADB9D8),
                                             width: 2,
                                           ),
@@ -413,7 +494,7 @@ class _RegisterEmployeePageState extends State<RegisterEmployeePage> {
                                     borderRadius: BorderRadius.circular(12),
                                     borderSide: BorderSide(
                                       color: Theme.of(context).brightness == Brightness.dark 
-                                          ? Colors.deepPurple
+                                          ? Color(0xFF1E3A8A)
                                           : const Color(0xFFADB9D8),
                                       width: 2,
                                     ),
@@ -461,7 +542,7 @@ class _RegisterEmployeePageState extends State<RegisterEmployeePage> {
                                     borderRadius: BorderRadius.circular(12),
                                     borderSide: BorderSide(
                                       color: Theme.of(context).brightness == Brightness.dark 
-                                          ? Colors.deepPurple
+                                          ? Color(0xFF1E3A8A)
                                           : const Color(0xFFADB9D8),
                                       width: 2,
                                     ),
@@ -502,7 +583,7 @@ class _RegisterEmployeePageState extends State<RegisterEmployeePage> {
                                     borderRadius: BorderRadius.circular(12),
                                     borderSide: BorderSide(
                                       color: Theme.of(context).brightness == Brightness.dark 
-                                          ? Colors.deepPurple
+                                          ? Color(0xFF1E3A8A)
                                           : const Color(0xFFADB9D8),
                                       width: 2,
                                     ),
@@ -563,7 +644,7 @@ class _RegisterEmployeePageState extends State<RegisterEmployeePage> {
                                     borderRadius: BorderRadius.circular(12),
                                     borderSide: BorderSide(
                                       color: Theme.of(context).brightness == Brightness.dark 
-                                          ? Colors.deepPurple
+                                          ? Color(0xFF1E3A8A)
                                           : const Color(0xFFADB9D8),
                                       width: 2,
                                     ),
@@ -622,7 +703,7 @@ class _RegisterEmployeePageState extends State<RegisterEmployeePage> {
                                         borderRadius: BorderRadius.circular(12),
                                         borderSide: BorderSide(
                                           color: Theme.of(context).brightness == Brightness.dark 
-                                              ? Colors.deepPurple
+                                              ? Color(0xFF1E3A8A)
                                               : const Color(0xFFADB9D8),
                                           width: 2,
                                         ),
